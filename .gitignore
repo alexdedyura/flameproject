@@ -1,0 +1,13 @@
+# MySQL
+**/mysql_log.txt
+**/mysql_log.html
+
+# Open.MP
+log.txt
+
+# macOS
+.DS_Store
+
+# AMX / XML
+flame.xml
+gamemodes/flame.amx
