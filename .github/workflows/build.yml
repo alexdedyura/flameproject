@@ -1,0 +1,110 @@
+name: Build & Release (Windows)
+
+# Компилирует gamemode компилятором Pawn (qawno) на Windows-раннере,
+# упаковывает готовый к запуску сервер в .zip и — при пуше тега vX.Y.Z —
+# публикует .zip в GitHub Releases.
+#
+# Linux-сборка будет добавлена отдельной job'ой позже.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Нужно для создания релиза и загрузки ассета через GITHUB_TOKEN.
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile gamemode
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path gamemodes | Out-Null
+          # Флаги повторяют compile.bat: требовать ; и (), вывод в gamemodes\flame.amx.
+          # Include-путь по умолчанию — qawno\include (относительно pawncc.exe),
+          # поэтому пути вида <..\..\sources\...> из flame.pwn резолвятся из корня репозитория.
+          & "qawno\pawncc.exe" "-;+" "-(+" "-ogamemodes\flame.amx" "sources\flame.pwn"
+          Write-Host "pawncc exit code: $LASTEXITCODE"
+          if (-not (Test-Path "gamemodes\flame.amx")) {
+            Write-Error "Compilation failed: gamemodes\flame.amx was not produced"
+            exit 1
+          }
+          Write-Host "Build OK: gamemodes\flame.amx"
+
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $ver = $env:GITHUB_REF_NAME
+          } else {
+            $ver = "dev-$($env:GITHUB_SHA.Substring(0,7))"
+          }
+          Write-Host "Version: $ver"
+          "REL_VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "ZIP_NAME=flameproject-$ver-windows.zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Stage server package
+        shell: pwsh
+        run: |
+          $stage = "dist/flameproject-server"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+
+          # Корневые runtime-файлы + документация.
+          Copy-Item omp-server.exe, libmysql.dll, config.json, bans.json, README.md, LICENSE -Destination $stage
+
+          # Собранный gamemode.
+          Copy-Item gamemodes -Destination $stage -Recurse
+
+          # Компоненты open.mp: только .dll (без debug-символов .pdb).
+          New-Item -ItemType Directory -Force -Path "$stage/components" | Out-Null
+          Copy-Item components/*.dll -Destination "$stage/components"
+
+          # Legacy Pawn-плагины: .dll + конфиги.
+          New-Item -ItemType Directory -Force -Path "$stage/plugins" | Out-Null
+          Copy-Item plugins/*.dll -Destination "$stage/plugins"
+          if (Test-Path plugins/*.cfg) { Copy-Item plugins/*.cfg -Destination "$stage/plugins" }
+
+          # Прочие runtime-каталоги и схема БД для первичной настройки.
+          Copy-Item filterscripts, npcmodes, scriptfiles, database -Destination $stage -Recurse
+
+          Write-Host "Staged package tree:"
+          Get-ChildItem -Recurse $stage | Select-Object FullName
+
+      - name: Create zip
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist/flameproject-server" -DestinationPath "$env:ZIP_NAME" -Force
+          Write-Host "Created $env:ZIP_NAME"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flameproject-windows
+          path: ${{ env.ZIP_NAME }}
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$env:GITHUB_REF_NAME" "$env:ZIP_NAME" `
+            --title "Flame Project $env:GITHUB_REF_NAME" `
+            --notes "Windows-сборка сервера Flame Project. Распакуйте архив, укажите креды MySQL и RCON-пароль, запустите omp-server.exe. Подробности — в README." `
+            --generate-notes
