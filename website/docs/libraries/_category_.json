@@ -1,0 +1,9 @@
+{
+  "label": "Библиотеки и зависимости",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "title": "Библиотеки и зависимости",
+    "description": "Legacy-плагины Pawn, нативные компоненты open.mp и compile-time инклюды, на которых держится гейммод."
+  }
+}

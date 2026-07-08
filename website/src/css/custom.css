@@ -1,0 +1,45 @@
+/**
+ * Тема Flame Project — «огненная» палитра поверх Infima.
+ * Тёмный режим — основной (проект по умолчанию открывается в dark).
+ */
+
+:root {
+  --ifm-color-primary: #d84315;
+  --ifm-color-primary-dark: #c23c13;
+  --ifm-color-primary-darker: #b73912;
+  --ifm-color-primary-darkest: #972f0f;
+  --ifm-color-primary-light: #ee4e1c;
+  --ifm-color-primary-lighter: #f05a2b;
+  --ifm-color-primary-lightest: #f2764f;
+
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #ff7043;
+  --ifm-color-primary-dark: #ff5722;
+  --ifm-color-primary-darker: #f4511e;
+  --ifm-color-primary-darkest: #e64a19;
+  --ifm-color-primary-light: #ff8a65;
+  --ifm-color-primary-lighter: #ff9a76;
+  --ifm-color-primary-lightest: #ffab91;
+
+  --ifm-background-color: #16110f;
+  --ifm-background-surface-color: #1e1815;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.06);
+}
+
+/* Акцентная полоса под хедером в «огненном» градиенте. */
+.navbar {
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, #ff9a76, #d84315) 1;
+}
+
+/* Таблицы в доке широкие — даём горизонтальную прокрутку внутри контейнера. */
+.markdown table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}

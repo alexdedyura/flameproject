@@ -147,7 +147,7 @@ flameproject/
 Ближайшие направления:
 
 - [ ] **Игровые системы** — улучшать и дописывать существующие механики, добавлять новые.
-- [ ] **Wiki** — полноценная документация по игровому моду (гайды для игроков, админов и разработчиков).
+- [x] **Документация** — сайт на GitHub Pages: [alexdedyura.github.io/flameproject](https://alexdedyura.github.io/flameproject/) (исходники — в [`website/`](website), сборка на [Docusaurus](https://docusaurus.io/)).
 - [x] **CI/CD (Windows)** — сборка `.zip` и публикация в Releases через GitHub Actions ([`build.yml`](.github/workflows/build.yml)).
 - [ ] **CI/CD (Linux)** — добавить Linux-сборку сервера отдельной job'ой.
 - [ ] **flamelibrary** — вынести базовую логику в отдельный фреймворк/библиотеку для переиспользования.
